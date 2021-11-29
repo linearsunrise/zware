@@ -3,7 +3,9 @@ const B = require('arcsecond-binary');
 const C = require('construct-js');
 const fs = require('fs');
 const path = require('path');
-const { environmentFunction, circle, fmFunction, fmDuneFunction } = require('./demo');
+const { circle, fmFunction, fmDuneFunction, serl, serl2 } = require('./demo');
+const { environmentFunction } = require('./src/environment');
+const { float32ToInt32 } = require('./src/utils');
 
 const waveProps = {
   sampleRate: 44100,
@@ -38,10 +40,10 @@ const dataSubChunkStruct = C.Struct('dataSubChunk')
   .field('data', C.S32LEs([0]));
 
 function dataRender(functionName = () => 0) {
-  const frameSize = 1024;
+  const frameSize = 2048;
   const frames = 256;
   const bytesPerSample = 4;
-  const soundData = new Int32Array(frames * frameSize * bytesPerSample);
+  const soundData = new Int32Array(frames * frameSize * bytesPerSample)
 
   for (let i = 0; i < frames; i++) {
     for (let j = 0; j < frameSize; j++) {
@@ -54,7 +56,7 @@ function dataRender(functionName = () => 0) {
       },
         functionName
       );
-      soundData[index] = sampleValue;
+      soundData[index] = float32ToInt32(sampleValue);
     }
   }
 
@@ -62,7 +64,7 @@ function dataRender(functionName = () => 0) {
 }
 
 // Change the function name in dataRender argument
-const soundData = dataRender(fmFunction);
+const soundData = dataRender(serl2);
 
 dataSubChunkStruct.get('data').set(soundData);
 dataSubChunkStruct.get('size').set(soundData.length);
@@ -72,4 +74,4 @@ const fileStruct = C.Struct('waveFile')
   .field('fmtSubChunk', fmtSubChunkStruct)
   .field('dataSubChunk', dataSubChunkStruct);
 
-fs.writeFileSync(path.join(__dirname, './new3.wav'), fileStruct.toBuffer());
+fs.writeFileSync(path.join(__dirname, './pulse.wav'), fileStruct.toBuffer());
