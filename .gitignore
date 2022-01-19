@@ -1,5 +1,8 @@
-.vscode
 node_modules/
+waverender/
+
+.vscode
+package-lock.json
+
 *.wav
 *.asd
-package-lock.json

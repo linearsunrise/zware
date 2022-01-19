@@ -9,10 +9,25 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  
   "dependencies": {
-    "@petamoriken/float16": "^3.5.11",
     "arcsecond": "^3.1.0",
     "arcsecond-binary": "^2.0.0",
-    "construct-js": "^0.7.0"
+    "construct-js": "^1.0.1",
+    "prettier": "^2.5.1",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.10.0",
+    "@typescript-eslint/parser": "^5.10.0",
+    "@typescript-eslint/scope-manager": "^5.10.0",
+    "@typescript-eslint/type-utils": "^5.10.0",
+    "@typescript-eslint/types": "^5.10.0",
+    "@typescript-eslint/typescript-estree": "^5.10.0",
+    "@typescript-eslint/utils": "^5.10.0",
+    "@typescript-eslint/visitor-keys": "^5.10.0",
+    "eslint": "^8.7.0"
   }
 }
