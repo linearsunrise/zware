@@ -1,15 +1,5 @@
-import {
-  Endian,
-  RawString,
-  Struct,
-  U16,
-  U16s,
-  U32,
-  U32s,
-  U8s,
-} from 'construct-js';
-import { dataRender } from './data';
-import { MathExpression } from './environment';
+import { Endian, RawString, Struct, U16, U32, U32s } from 'construct-js';
+import { TypedArray } from './utils';
 
 // Change the function name in dataRender argument
 
@@ -23,13 +13,11 @@ export type WaveProperties = {
 
 export default function createWaveFileStruct(
   waveProps: WaveProperties,
-  func: MathExpression
+  buffer: TypedArray
 ) {
-  const soundData = dataRender(func);
-
   const riffChunkStruct = Struct('riffChunk')
     .field('magic', RawString('RIFF'))
-    .field('size', U32(0x00200060, Endian.Little))
+    .field('size', U32(2097230, Endian.Little))
     .field('fmtName', RawString('WAVE'));
 
   const fmtSubChunkStruct = Struct('fmtSubChunk')
@@ -38,7 +26,7 @@ export default function createWaveFileStruct(
     .field('audioFormat', U16(waveProps.audioFormat, Endian.Little))
     .field('numChannels', U16(waveProps.numChan, Endian.Little))
     .field('sampleRate', U32(waveProps.sampleRate, Endian.Little))
-    .field('byteRate', U32(waveProps.sampleRate * 2, Endian.Little))
+    .field('byteRate', U32(waveProps.sampleRate * buffer.BYTES_PER_ELEMENT, Endian.Little))
     .field('blockAlign', U16(2, Endian.Little))
     .field('bitsPerSample', U16(waveProps.bitsPerSample, Endian.Little))
     .field('extraParamSize', RawString('cl'))
@@ -52,8 +40,8 @@ export default function createWaveFileStruct(
     .field('size', U32(0, Endian.Little))
     .field('data', U32s([0], Endian.Little));
 
-  dataSubChunkStruct.get('data').set(soundData);
-  dataSubChunkStruct.get('size').set(soundData.length * 4);
+  dataSubChunkStruct.get('data').set(buffer);
+  dataSubChunkStruct.get('size').set(buffer.length * buffer.BYTES_PER_ELEMENT);
 
   const fileStruct = Struct('waveFile')
     .field('riffChunk', riffChunkStruct)

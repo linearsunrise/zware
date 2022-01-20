@@ -1,45 +1,92 @@
-export type MathExpression = (x: number, y?: number) => number;
-type WaveProps = {
-  yOffset: number;
-  xOffset: number;
+import { convertTypedArray, TypedArray, TypedArrayConstructor } from './utils';
+
+export type MathExpression = (x: number, y: number) => number;
+type WaveTableProps = {
   waveSize: number;
   wavesCount: number;
+  type: {
+    input: TypedArrayConstructor;
+    output: TypedArrayConstructor;
+  };
 };
-type XYExpr = (x: number, y: number) => number;
 
-export class Environment {
+interface BaseGeneratorState {
+  frames: number;
+  frameSamples: number;
+  nonTypedArray: number[][];
+  OutputArrayConstructor: TypedArrayConstructor;
+  InputArrayConstructor: TypedArrayConstructor;
+}
 
-  // serial(ampFunction: (x: number) => number, bandsCount = 0) {
-  //   let outputValue = 0;
-  //   for (let i = 1; i <= bandsCount; i++) {
-  //     const part = ampFunction(i);
-  //     outputValue +=
-  //       Math.sin(Math.PI * i * this.x) * (+Number.isFinite(+part) && +part);
-  //   }
+interface BaseGeneratorMethods {
+  clip(v: number): number;
+  evaluate(functionName: MathExpression): TypedArray;
+}
 
-  //   return outputValue;
-  // }
+const clip = function (value = 0) {
+  if (!Number.isFinite(value)) return 0;
+  if (value < -1) return -1;
+  if (value > 1) return 1;
+  return value;
+};
 
-  static clip(value = 0) {
-    if (Number.isFinite(value)) {
-      if (value < -1) return -1;
-      if (value > 1) return 1;
-      return value;
-    }
-    return 0;
+export class BasicWaveGenerator implements BaseGeneratorMethods, BaseGeneratorState {
+  nonTypedArray: number[][];
+  InputArrayConstructor: TypedArrayConstructor;
+  OutputArrayConstructor: TypedArrayConstructor;
+  frames: number;
+  frameSamples: number;
+
+  constructor(props: WaveTableProps) {
+    const { waveSize, wavesCount } = props;
+    const { input: InputType, output: OutputType } = props.type;
+
+    this.InputArrayConstructor = InputType;
+    this.OutputArrayConstructor = OutputType;
+
+    this.frames = wavesCount;
+    this.frameSamples = waveSize;
+    this.nonTypedArray = Array.from(
+      { length: wavesCount }, 
+      () => Array.from(
+        { length: waveSize }, 
+        (x, i) => (i / (waveSize - 1)) * 2 - 1
+      )
+    );
   }
 
-  static evaluate(props: WaveProps, functionName: MathExpression) {
-    const {
-      yOffset: y_os,
-      xOffset: x_os,
-      waveSize: ws,
-      wavesCount: wc,
-    } = props;
-    const [x, y] = [
-      (x_os * 2 - ws) / ws,
-      (y_os * 2 - wc) / wc,
-    ];
-    return this.clip(functionName(x, y));
+  evaluate(functionName: MathExpression) {
+    const source = this.nonTypedArray.flatMap((frame, frameIndex) => {
+      const y = (frameIndex / (this.frames - 1)) * 2 - 1;
+
+      return frame.map((sample) => {
+        const x = sample;
+        return this.clip(functionName(x, y));
+      });
+    });
+    console.log(source);
+    const typedArray = new this.InputArrayConstructor(source);
+
+    return convertTypedArray(typedArray, this.OutputArrayConstructor);
   }
+
+  clip = clip;
+}
+
+export class SpectralWaveGenerator
+implements BaseGeneratorState, BaseGeneratorMethods
+{
+  nonTypedArray: number[][];
+  OutputArrayConstructor: TypedArrayConstructor;
+  InputArrayConstructor: TypedArrayConstructor;
+
+  constructor(props: WaveTableProps) {
+    throw new Error('Method not implemented.');
+  }
+  frames: number;
+  frameSamples: number;
+  evaluate(functionName: MathExpression): TypedArray {
+    throw new Error('Method not implemented.');
+  }
+  clip = clip;
 }

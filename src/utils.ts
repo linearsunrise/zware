@@ -7,9 +7,7 @@ export type TypedArray =
   | Uint16Array
   | Uint32Array
   | Float32Array
-  | Float64Array
-  | BigInt64Array
-  | BigUint64Array;
+  | Float64Array;
 
 export type TypedArrayConstructor =
   | Int8ArrayConstructor
@@ -21,8 +19,6 @@ export type TypedArrayConstructor =
   | Uint32ArrayConstructor
   | Float32ArrayConstructor
   | Float64ArrayConstructor
-  | BigInt64ArrayConstructor
-  | BigUint64ArrayConstructor;
 
 export function convertTypedArray(
   src: TypedArray,

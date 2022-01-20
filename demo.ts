@@ -30,10 +30,10 @@ export const Logic = {
   rect: (
     x: number,
     y: number,
-    xPos?: number,
-    yPos?: number,
-    width?: number,
-    height?: number
+    xPos: number,
+    yPos: number,
+    width: number,
+    height: number
   ): boolean =>
     x >= (Number.isFinite(xPos) ? xPos : -1) &&
     x <= (Number.isFinite(width) ? width : 1) &&
@@ -51,12 +51,12 @@ export const Letters: { [k: string]: MathExpression } = {
 
     return +(
       (
-        circle(x, y, -a + 0.05, -a + 0.05, c - 0.1) &&
-        !rect(x, y, -1 + 0.15, -1 + 0.15, b + 0.15, b - 0.05) &&
-        circle(x, y, -b + 0.05, -c + 0.05, a - 0.1) &&
-        !rect(x, y, -1 + 0.15, 1 - 0.15, b - 0.05, a - 0.15) &&
-        circle(x, y, -a, a, c)
+        circle(x, y, -a + 0.05, a + 0.05, c - 0.1) &&
+        !rect(x, y, -1 + 0.15, -1 + 0.15, b + 0.15, b - 0.15)
       )
+      // && circle(x, y, -b + 0.05, -c + 0.05, a - 0.1)
+      // && !rect(x, y, -1 + 0.15, 1 - 0.15, b - 0.05, a - 0.15) &&
+      // circle(x, y, -a, a, c)
       //   ||
       //   circle(x, y, -b, -c, a) ||
       //   ((x < b || y < b) && x < a)) &&
@@ -67,15 +67,15 @@ export const Letters: { [k: string]: MathExpression } = {
     const a = 0.15 / 4;
 
     return Number(
-      (Logic.circle(x, y, -0.5 + a, 0.5 - a, 0.5 + a) ||
-        (Logic.circle(x, y, 0.5 - a, -0.5 + a, 0.5 + a) &&
-          !Logic.rect(x, y, null, -0.85, 0.5 - a, -a * 2) &&
-          (x < -0.5 + a || y > 0.85 || y < a * 2)) ||
+      ((!Logic.circle(x, y, -0.5 + a, 0.5 - a, 0.5 + a) ||
+        !Logic.circle(x, y, 0.5 - a, -0.5 + a, 0.5 + a)) &&
+        (x < 0.5 - a || y > -0.85 || y < -a * 2) &&
+        (x < -0.5 + a || y > 0.85 || y < a * 2)) ||
         (x > -0.5 + a && y > 0.85) ||
         (x < 0.5 - a && y < -0.85) ||
-        (x > -0.5 + a && x < 0.5 - a && y > -a * 2 && y < a * 2)) &&
-        Logic.circle(x, y, -0.5 + a, 0.5 - a, 0.5 - 3 * a) &&
-        Logic.circle(x, y, 0.5 - a, -0.5 + a, 0.5 - 3 * a)
+        (Logic.rect(x, y, -0.5 + a, -a * 2, 0.5 - a, a * 2) &&
+          Logic.circle(x, y, -0.5 + a, 0.5 - a, 0.5 - 3 * a) &&
+          Logic.circle(x, y, 0.5 - a, -0.5 + a, 0.5 - 3 * a))
     );
   },
 };
