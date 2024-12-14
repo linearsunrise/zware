@@ -1,9 +1,7 @@
-import { writeFileSync } from 'fs';
-import { join } from 'path';
-import { BasicExpressions, Letters } from './demo';
-import { BasicWaveGenerator } from './src/environment';
-import createWaveFileStruct, { WaveProperties } from './src/filestruct';
 
+import createWaveFileStruct, { WaveProperties } from './src/utils/filestruct';
+import { PictureWaveGenerator } from './src/utils/wave-generators/picture-wave';
+import { FileHandlingService } from './src/utils/file';
 const fileProps: WaveProperties = {
   sampleRate: 44100,
   numChan: 1,
@@ -14,22 +12,47 @@ const fileProps: WaveProperties = {
 
 const WaveTableBufferProps = {
   waveSize: 2048,
-  wavesCount: 1,
+  wavesCount: 256,
   type: {
     input: Float32Array,
     output: Uint32Array,
   },
 };
 
-const generator = new BasicWaveGenerator(WaveTableBufferProps);
+// let fileStruct: StructType;
+// const picture = readFileSync(join(__dirname, './image.png'));
 
-const fileStruct = createWaveFileStruct(
-  fileProps,
-  generator.evaluate(BasicExpressions.fmFunction)
-);
+// const generator = new PictureWaveGenerator(WaveTableBufferProps);
+// generator.evaluate('./image.png').then(
+//   (res) => {
+//     console.log(createWaveFileStruct(fileProps, res));
+//   },
 
-// eslint-disable-next-line no-undef
-writeFileSync(
-  join(__dirname, './waverender/FM.wav'),
-  fileStruct.toUint8Array()
-);
+//   (error) => {
+//     throw new Error(error);
+//   }
+// );
+
+const buffer = await new PictureWaveGenerator(WaveTableBufferProps)
+  .evaluate({
+    image: './photo_2022-02-23_17-41-21.jpg',
+  })
+  .then((res) => {
+    const fileStruct = createWaveFileStruct(fileProps, res.getBuffer());
+
+    return fileStruct.toUint8Array();
+  });
+
+FileHandlingService.saveTo('./waverender/savvv.wav', buffer);
+
+// const generator = new BasicWaveGenerator(WaveTableBufferProps);
+
+// const fileStruct = createWaveFileStruct(
+//   fileProps,
+//   generator.evaluate(BasicExpressions.distort)
+// );
+
+// writeFileSync(
+//   join(__dirname, './waverender/phaseDistort.wav'),
+//   fileStruct.toUint8Array()
+// );

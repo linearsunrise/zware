@@ -1,5 +1,6 @@
 node_modules/
 waverender/
+input/
 
 .vscode
 package-lock.json

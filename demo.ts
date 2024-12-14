@@ -1,21 +1,43 @@
 // Demo expressions
-// export const Serials = {
-//   serl() { return serial((x) => 1 / x, 1024); },
-//   serl2() { return serial((x) => x % 2 && 1 / x, 1024); }
-// };
 
-import { MathExpression } from './src/environment';
+import { MathExpression } from "./src/utils/wave-generators/types";
 
 const unsign = (x: number): number => (x + 1) / 2;
 
+let externalState = 0;
+
 export const BasicExpressions = {
   fmFunction: (x: number, y: number) =>
-    Math.sin(2 * x * Math.PI + unsign(y) * 3 * Math.sin(2 * x * Math.PI)),
+    Math.sin(x * Math.PI + unsign(y) * 3 * Math.sin(2 * x * Math.PI)),
+
+  fmFeedbackExperiment: (x: number, y: number) => {
+    externalState = Math.sin(x * Math.PI + externalState * Math.PI) * unsign(y);
+    return Math.sin(x * Math.PI + externalState);
+  },
+
   fmDuneFunction: (x: number, y: number) =>
     Math.sin(
       2 * x * Math.PI +
         unsign(y) * 10 * Math.sin(2 * x * Math.PI + unsign(y) * Math.PI)
     ),
+
+  phaseDistort: (x: number, y: number) => {
+    const f = (x) =>
+      ((2 / Math.PI) * Math.asin(Math.sin(x - Math.PI / 2))) / 2 - 1 / 2;
+
+    const g = (x) => (x > 0 ? x : -f(x * unsign(y) * 46) * x);
+
+    return Math.sin(g(x) * Math.PI);
+  },
+
+  distort: (x: number, y: number) => {
+    const f = (x) =>
+      ((2 / Math.PI) * Math.asin(Math.sin(x - Math.PI / 2))) / 2 - 1 / 2;
+
+    const g = (x) => (x > 0 ? x : -f(x * unsign(y) * 46) * x);
+
+    return g(Math.sin(x * Math.PI));
+  },
 };
 
 export const Logic = {

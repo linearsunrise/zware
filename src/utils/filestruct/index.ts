@@ -1,7 +1,5 @@
 import { Endian, RawString, Struct, U16, U32, U32s } from 'construct-js';
-import { TypedArray } from './utils';
-
-// Change the function name in dataRender argument
+import { TypedArray } from '../../types';
 
 export type WaveProperties = {
   audioFormat: number;
@@ -26,7 +24,10 @@ export default function createWaveFileStruct(
     .field('audioFormat', U16(waveProps.audioFormat, Endian.Little))
     .field('numChannels', U16(waveProps.numChan, Endian.Little))
     .field('sampleRate', U32(waveProps.sampleRate, Endian.Little))
-    .field('byteRate', U32(waveProps.sampleRate * buffer.BYTES_PER_ELEMENT, Endian.Little))
+    .field(
+      'byteRate',
+      U32(waveProps.sampleRate * buffer.BYTES_PER_ELEMENT, Endian.Little)
+    )
     .field('blockAlign', U16(2, Endian.Little))
     .field('bitsPerSample', U16(waveProps.bitsPerSample, Endian.Little))
     .field('extraParamSize', RawString('cl'))
