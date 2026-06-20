@@ -95,7 +95,7 @@ function handlePreview() {
 
 .formula-editor__mode-tabs {
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .formula-editor__tab {
