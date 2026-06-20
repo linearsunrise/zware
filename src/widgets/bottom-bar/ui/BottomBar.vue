@@ -76,7 +76,7 @@ function handleSave() {
   padding: 2rem 4rem;
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 3.5rem;
-  border-radius: 1rem;
+  ;
   cursor: pointer;
   border: 0.25rem solid rgba(227, 227, 227, 0.2);
   background: transparent;

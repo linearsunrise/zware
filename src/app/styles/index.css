@@ -46,7 +46,6 @@ input, select, textarea {
 
 ::-webkit-scrollbar-thumb {
   background: rgba(227, 227, 227, 0.15);
-  border-radius: 0.5rem;
 }
 
 ::-webkit-scrollbar-thumb:hover {

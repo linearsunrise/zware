@@ -86,7 +86,7 @@ function onFrameCountChange(e: Event) {
   right: 0;
   background: #1a1a1a;
   border: 0.25rem solid rgba(227, 227, 227, 0.15);
-  border-radius: 2rem;
+  ;
   padding: 4rem;
   min-width: 72rem;
   display: flex;
@@ -125,7 +125,7 @@ function onFrameCountChange(e: Event) {
   padding: 1.5rem 3rem;
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 3.5rem;
-  border-radius: 1rem;
+  ;
   cursor: pointer;
   outline: none;
 }
@@ -137,7 +137,7 @@ function onFrameCountChange(e: Event) {
   padding: 1.5rem 3rem;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 3.5rem;
-  border-radius: 1rem;
+  ;
   outline: none;
   width: 24rem;
   box-sizing: border-box;

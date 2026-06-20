@@ -90,8 +90,8 @@ onUnmounted(() => {
 
 .heatmap__label {
   position: absolute;
-  top: 2rem;
-  left: 3rem;
+  top: 4rem;
+  left: 4rem;
   font-size: 3rem;
   color: rgba(227, 227, 227, 0.4);
   letter-spacing: 0.25rem;

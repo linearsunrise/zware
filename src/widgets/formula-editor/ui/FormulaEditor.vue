@@ -170,9 +170,9 @@ function formatDate(ts: number): string {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  padding: 3rem;
+  padding: 4rem;
   box-sizing: border-box;
-  gap: 2rem;
+  gap: 4rem;
 }
 
 .formula-editor__header {
@@ -202,7 +202,7 @@ function formatDate(ts: number): string {
   border: 0.25rem solid rgba(227, 227, 227, 0.2);
   color: rgba(227, 227, 227, 0.5);
   cursor: pointer;
-  border-radius: 1rem;
+  ;
 }
 
 .formula-editor__tab--active {
@@ -238,7 +238,7 @@ function formatDate(ts: number): string {
   background: rgba(255, 255, 255, 0.03);
   color: #e3e3e3;
   border: 0.25rem solid rgba(227, 227, 227, 0.12);
-  border-radius: 1rem;
+  ;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 3.5rem;
   line-height: 1.6;
@@ -274,7 +274,7 @@ function formatDate(ts: number): string {
   padding: 2rem 4rem;
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 3.5rem;
-  border-radius: 1rem;
+  ;
   cursor: pointer;
   border: 0.25rem solid rgba(227, 227, 227, 0.2);
   background: transparent;
@@ -313,12 +313,12 @@ function formatDate(ts: number): string {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  gap: 2rem;
+  gap: 4rem;
 }
 
 .formula-library__save {
   display: flex;
-  gap: 2rem;
+  gap: 4rem;
   flex-shrink: 0;
 }
 
@@ -327,7 +327,7 @@ function formatDate(ts: number): string {
   background: rgba(255, 255, 255, 0.03);
   color: #e3e3e3;
   border: 0.25rem solid rgba(227, 227, 227, 0.12);
-  border-radius: 1rem;
+  ;
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 3.5rem;
   padding: 2rem 3rem;
@@ -373,7 +373,7 @@ function formatDate(ts: number): string {
   gap: 3rem;
   padding: 2.5rem 3rem;
   border: 0.25rem solid rgba(227, 227, 227, 0.08);
-  border-radius: 1rem;
+  ;
   transition: border-color 0.15s;
 }
 
@@ -431,7 +431,7 @@ function formatDate(ts: number): string {
   font-size: 4rem;
   background: transparent;
   border: 0.25rem solid transparent;
-  border-radius: 1rem;
+  ;
   color: rgba(227, 227, 227, 0.3);
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;

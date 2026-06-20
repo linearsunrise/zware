@@ -78,8 +78,8 @@ onUpdated(drawAll)
   width: 100%;
   height: 100%;
   overflow: hidden;
-  gap: 3rem;
-  padding: 3rem;
+  gap: 4rem;
+  padding: 4rem;
   box-sizing: border-box;
 }
 
