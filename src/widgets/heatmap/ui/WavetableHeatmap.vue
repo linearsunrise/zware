@@ -2,6 +2,11 @@
   <div class="heatmap">
     <span class="heatmap__label">Heatmap</span>
     <canvas ref="canvasRef" class="heatmap__canvas" />
+    <div
+      v-if="frames"
+      class="heatmap__cursor"
+      :style="{ left: cursorLeft }"
+    />
     <div v-if="!frames" class="heatmap__empty">
       <span>Preview a formula to see the wavetable</span>
     </div>
@@ -9,11 +14,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{
   frames: Float32Array[] | null
+  selectedFrameIndex: number
 }>()
+
+const cursorLeft = computed(() => {
+  if (!props.frames || props.frames.length <= 1) return '0%'
+  return `${(props.selectedFrameIndex / (props.frames.length - 1)) * 100}%`
+})
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let resizeObserver: ResizeObserver | null = null
@@ -94,6 +105,19 @@ onUnmounted(() => {
   height: 100%;
   image-rendering: pixelated;
   display: block;
+}
+
+.heatmap__cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0.25rem;
+  background: #4ade80;
+  box-shadow: 0 0 4rem #4ade80;
+  pointer-events: none;
+  transform: translateX(-50%);
+  z-index: 2;
+  transition: left 0.05s linear;
 }
 
 .heatmap__empty {

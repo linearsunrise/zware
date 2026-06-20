@@ -2,7 +2,7 @@
   <div class="app">
     <main class="workspace">
       <section class="workspace__cell">
-        <WavetableHeatmap :frames="frames" />
+        <WavetableHeatmap :frames="frames" :selected-frame-index="selectedFrameIndex" />
       </section>
 
       <section class="workspace__cell">
