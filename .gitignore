@@ -3,7 +3,6 @@ waverender/
 input/
 
 .vscode
-package-lock.json
 
 *.wav
 *.asd
