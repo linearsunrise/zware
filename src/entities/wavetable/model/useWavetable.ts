@@ -1,48 +1,81 @@
-import { ref, shallowRef } from 'vue'
-import { parseFormula } from '@/shared/lib/math-parser'
-import { generateWavetable } from '@/entities/wavetable/lib/generator'
-import { useSettings } from '@/features/settings/model/useSettings'
+import { ref, shallowRef } from 'vue';
+import { useSettings } from '@/features/settings/model/useSettings';
+import { GenerateResponse, GenerateRequest } from './types';
 
-const frames = shallowRef<Float32Array[] | null>(null)
-const selectedFrameIndex = ref(0)
-const formula = ref('sin(x * PI)')
-const isGenerating = ref(false)
-const error = ref<string | null>(null)
+const framesBuffer = shallowRef<Float32Array | null>(null);
+const selectedFrameIndex = ref(0);
+const formula = ref('sin(x * PI)');
+const isGenerating = ref(false);
+const error = ref<string | null>(null);
+
+const worker = new Worker(new URL('./wavetable.worker.ts', import.meta.url), {
+  type: 'module',
+});
+
+export function generateWavetable(
+  request: GenerateRequest
+): Promise<Float32Array<ArrayBufferLike>> {
+  return new Promise((resolve, reject) => {
+    worker.onmessage = (event: MessageEvent<GenerateResponse>) => {
+      const response = event.data;
+
+      console.log({ response, event })
+      if (response.type === 'error') {
+        reject(new Error(response.message));
+        return;
+      }
+
+      resolve(new Float32Array(response.buffer));
+    };
+
+    worker.postMessage(request);
+  });
+}
 
 export function useWavetable() {
-  const { frameSize, frameCount } = useSettings()
+  const { frameSize, frameCount } = useSettings();
 
-  function preview(formulaText: string) {
-    isGenerating.value = true
-    error.value = null
-    formula.value = formulaText
+  async function preview(formulaText: string) {
+    isGenerating.value = true;
+    error.value = null;
+    formula.value = formulaText;
 
     try {
-      const fn = parseFormula(formulaText)
-      frames.value = generateWavetable(fn, frameCount.value, frameSize.value)
+      framesBuffer.value = await generateWavetable({
+        type: 'generate',
+        formula: formulaText,
+        frameCount: frameCount.value,
+        frameSize: frameSize.value,
+      }).then((res) => {
+        console.log({ res })
+        return res;
+      });
+
       selectedFrameIndex.value = Math.min(
         selectedFrameIndex.value,
-        frameCount.value - 1,
-      )
+        frameCount.value - 1
+      );
     } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Unknown error'
-      frames.value = null
+      error.value = e instanceof Error ? e.message : 'Unknown error';
+      framesBuffer.value = null;
     } finally {
-      isGenerating.value = false
+      isGenerating.value = false;
     }
   }
 
   function selectFrame(index: number) {
-    selectedFrameIndex.value = index
+    selectedFrameIndex.value = index;
   }
 
   return {
-    frames,
+    framesBuffer,
     selectedFrameIndex,
     formula,
     isGenerating,
     error,
+    frameSize,
+    frameCount,
     preview,
     selectFrame,
-  }
+  };
 }

@@ -17,7 +17,9 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{
-  frames: Float32Array[] | null
+  frames: Float32Array | null
+  frameSize: number
+  frameCount: number
   selectedFrameIndex: number
 }>()
 
@@ -33,8 +35,7 @@ function draw() {
   const canvas = canvasRef.value
   if (!canvas || !props.frames || props.frames.length === 0) return
 
-  const frameCount = props.frames.length
-  const frameSize = props.frames[0].length
+  const {frameCount, frameSize} = props
 
   canvas.width = frameCount
   canvas.height = frameSize
@@ -46,7 +47,7 @@ function draw() {
   const data = imageData.data
 
   for (let fi = 0; fi < frameCount; fi++) {
-    const frame = props.frames[fi]
+    const frame = props.frames.subarray(fi * frameSize, (fi + 1) * frameSize)
     for (let si = 0; si < frameSize; si++) {
       const amp = frame[si]
       const t = (amp + 1) / 2

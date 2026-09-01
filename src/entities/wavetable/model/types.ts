@@ -1,7 +1,16 @@
-export interface WavetableState {
-  frames: Float32Array[] | null
-  selectedFrameIndex: number
+export type GenerateRequest = {
+  type: 'generate'
   formula: string
-  isGenerating: boolean
-  error: string | null
+  frameCount: number
+  frameSize: number
 }
+
+export type GenerateResponse =
+  | {
+      type: 'result'
+      buffer: ArrayBufferLike
+    }
+  | {
+      type: 'error'
+      message: string
+    }

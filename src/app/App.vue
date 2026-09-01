@@ -2,7 +2,12 @@
   <div class="app">
     <main class="workspace">
       <section class="workspace__cell">
-        <WavetableHeatmap :frames="frames" :selected-frame-index="selectedFrameIndex" />
+        <WavetableHeatmap
+          :frames="framesBuffer"
+          :frame-size="frameSize"
+          :frame-count="frameCount"
+          :selected-frame-index="selectedFrameIndex"
+        />
       </section>
 
       <section class="workspace__cell">
@@ -14,13 +19,15 @@
           :initial-formula="formula"
           :is-generating="isGenerating"
           :error="error"
-          @preview="preview"
+          @preview="handlePreview"
         />
       </section>
 
       <section class="workspace__cell">
         <FrameSelector
-          :frames="frames"
+          :frames="framesBuffer"
+          :frame-size="frameSize"
+          :frame-count="frameCount"
           :selected-index="selectedFrameIndex"
           @select="selectFrame"
         />
@@ -32,20 +39,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import WavetableHeatmap from '@/widgets/heatmap/ui/WavetableHeatmap.vue'
-import Oscilloscope from '@/widgets/oscilloscope/ui/Oscilloscope.vue'
-import FormulaEditor from '@/widgets/formula-editor/ui/FormulaEditor.vue'
-import FrameSelector from '@/widgets/frame-selector/ui/FrameSelector.vue'
-import BottomBar from '@/widgets/bottom-bar/ui/BottomBar.vue'
-import { useWavetable } from '@/entities/wavetable/model/useWavetable'
+import { computed } from 'vue';
+import WavetableHeatmap from '@/widgets/heatmap/ui/WavetableHeatmap.vue';
+import Oscilloscope from '@/widgets/oscilloscope/ui/Oscilloscope.vue';
+import FormulaEditor from '@/widgets/formula-editor/ui/FormulaEditor.vue';
+import FrameSelector from '@/widgets/frame-selector/ui/FrameSelector.vue';
+import BottomBar from '@/widgets/bottom-bar/ui/BottomBar.vue';
+import { useWavetable } from '@/entities/wavetable/model/useWavetable';
 
-const { frames, selectedFrameIndex, formula, isGenerating, error, preview, selectFrame } =
-  useWavetable()
+const {
+  framesBuffer,
+  selectedFrameIndex,
+  formula,
+  isGenerating,
+  error,
+  frameSize,
+  frameCount,
+  preview,
+  selectFrame,
+} = useWavetable();
+
+const handlePreview = async (formulaText: string) => {
+  await preview(formulaText)
+}
 
 const currentFrame = computed(() =>
-  frames.value ? frames.value[selectedFrameIndex.value] ?? null : null,
-)
+  framesBuffer.value
+    ? (framesBuffer.value.subarray(selectedFrameIndex.value * frameSize.value, (selectedFrameIndex.value + 1) * frameSize.value) ?? null)
+    : null
+);
 </script>
 
 <style scoped>

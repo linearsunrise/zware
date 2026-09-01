@@ -7,9 +7,8 @@ function writeStr(view: DataView, offset: number, str: string): number {
   return offset + str.length
 }
 
-export function createWavBuffer(frames: Float32Array[], frameSize: number): ArrayBuffer {
-  const frameCount = frames.length
-  const totalSamples = frameCount * frameSize
+export function createWavBuffer(frames: Float32Array, frameSize: number): ArrayBuffer {
+  const totalSamples = frames.length
 
   const serumMeta = `m 0\x00\x00\x00<!>${frameSize} 00000000 wavetable`
   const fmtContentSize = 16 + 2 + serumMeta.length
@@ -50,16 +49,14 @@ export function createWavBuffer(frames: Float32Array[], frameSize: number): Arra
   offset += 4
 
   for (const frame of frames) {
-    for (let i = 0; i < frameSize; i++) {
-      view.setFloat32(offset, frame[i] ?? 0, true)
-      offset += 4
-    }
+    view.setFloat32(offset, frame ?? 0, true)
+    offset += 4
   }
 
   return buffer
 }
 
-export function downloadWav(frames: Float32Array[], frameSize: number, filename = 'wavetable.wav') {
+export function downloadWav(frames: Float32Array, frameSize: number, filename = 'wavetable.wav') {
   const buffer = createWavBuffer(frames, frameSize)
   const blob = new Blob([buffer], { type: 'audio/wav' })
   const url = URL.createObjectURL(blob)

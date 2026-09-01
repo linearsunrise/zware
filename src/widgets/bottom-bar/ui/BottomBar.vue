@@ -34,7 +34,7 @@ import { useWavetable } from '@/entities/wavetable/model/useWavetable'
 import { useSettings } from '@/features/settings/model/useSettings'
 import { downloadWav } from '@/shared/lib/wav-writer'
 
-const { frames } = useWavetable()
+const { framesBuffer: frames } = useWavetable()
 const { frameSize } = useSettings()
 
 const settingsOpen = ref(false)
