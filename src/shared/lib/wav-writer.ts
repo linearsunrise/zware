@@ -8,6 +8,19 @@ import {
   U8s,
 } from 'construct-js';
 
+const MorphingMode = {
+  NoLerp: 0,
+  Lerp: 1,
+  Spectral1: 2,
+  Spectral2: 3,
+  Spectral3: 4,
+} as const;
+
+const CreatedMode = {
+  Custom: 0,
+  Factory: 0,
+} as const;
+
 export default function createWavBuffer(
   frames: Float32Array,
   frameSize: number
@@ -17,18 +30,21 @@ export default function createWavBuffer(
   const bitsPerSample = 32;
   const bytesPerSample = bitsPerSample / 8;
 
+  const flags = [MorphingMode.Lerp, CreatedMode.Custom, 0, 0, 0, 0, 0, 0];
+
   const clmChunk = Struct('clmChunk')
     .field('clmId', RawString('clm '))
     .field('clmSize', U32(0, Endian.Little))
     .field(
       'clmData',
       RawString(
-        [
-          '<!>',
-          frameSize.toString(),
-          'wavetable',
-          '(www.xferrecords.com)',
-        ].join(' ')
+        '<!>' +
+          [
+            frameSize.toString(),
+            'wavetable',
+            flags.join(''),
+            '(www.xferrecords.com)',
+          ].join(' ')
       )
     );
 
