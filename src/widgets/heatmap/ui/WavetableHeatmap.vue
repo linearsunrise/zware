@@ -16,6 +16,20 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
+type RGB = [number, number, number]
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t
+}
+
+function lerpColor(a: RGB, b: RGB, t: number): RGB {
+  return [
+    Math.round(lerp(a[0], b[0], t)),
+    Math.round(lerp(a[1], b[1], t)),
+    Math.round(lerp(a[2], b[2], t)),
+  ]
+}
+
 const props = defineProps<{
   frames: Float32Array | null
   frameSize: number
@@ -46,17 +60,23 @@ function draw() {
   const imageData = ctx.createImageData(frameCount, frameSize)
   const data = imageData.data
 
+  const minColor: RGB = [18, 18, 18]
+  const maxColor: RGB = [240, 240, 240]
+
+
   for (let fi = 0; fi < frameCount; fi++) {
     const frame = props.frames.subarray(fi * frameSize, (fi + 1) * frameSize)
     for (let si = 0; si < frameSize; si++) {
       const amp = frame[si]
       const t = (amp + 1) / 2
-      const brightness = Math.round(18 + (227 - 18) * t)
       const y = frameSize - 1 - si
       const idx = (y * frameCount + fi) * 4
-      data[idx] = brightness
-      data[idx + 1] = brightness
-      data[idx + 2] = brightness
+
+      const [r,g,b] = lerpColor(minColor, maxColor, t)
+
+      data[idx] = r
+      data[idx + 1] = g
+      data[idx + 2] = b
       data[idx + 3] = 255
     }
   }
