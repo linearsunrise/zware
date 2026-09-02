@@ -25,31 +25,25 @@ export default function createWavBuffer(
   frames: Float32Array,
   frameSize: number
 ) {
-  const sampleRate = 44100;
+  const sampleRate = 48000;
   const channels = 1;
   const bitsPerSample = 32;
   const bytesPerSample = bitsPerSample / 8;
 
   const flags = [MorphingMode.Lerp, CreatedMode.Custom, 0, 0, 0, 0, 0, 0];
 
+  const clmDataSize = 48
+  const clmData = `<!>${frameSize.toString().padStart(4, ' ')} wavetable ${flags.join('')}`.padEnd(clmDataSize, String.fromCharCode(0))
+
   const clmChunk = Struct('clmChunk')
     .field('clmId', RawString('clm '))
-    .field('clmSize', U32(0, Endian.Little))
+    .field('clmSize', U32(clmDataSize, Endian.Little))
     .field(
       'clmData',
       RawString(
-        '<!>' +
-          [
-            frameSize.toString(),
-            'wavetable',
-            flags.join(''),
-            '(www.xferrecords.com)',
-          ].join(' ')
+        clmData
       )
     );
-
-  const clmSize = clmChunk.get('clmData').computeBufferSize();
-  clmChunk.get<DataType<typeof U32>>('clmSize').set(clmSize);
 
   // ВАЖНО:
   // сохраняем ровно IEEE-754 байты Float32Array
