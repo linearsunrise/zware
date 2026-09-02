@@ -19,7 +19,6 @@ export function generateWavetable(
     worker.onmessage = (event: MessageEvent<GenerateResponse>) => {
       const response = event.data;
 
-      console.log({ response, event })
       if (response.type === 'error') {
         reject(new Error(response.message));
         return;
@@ -46,10 +45,7 @@ export function useWavetable() {
         formula: formulaText,
         frameCount: frameCount.value,
         frameSize: frameSize.value,
-      }).then((res) => {
-        console.log({ res })
-        return res;
-      });
+      })
 
       selectedFrameIndex.value = Math.min(
         selectedFrameIndex.value,

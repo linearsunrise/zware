@@ -18,12 +18,12 @@ self.onmessage = (event: MessageEvent<GenerateRequest>): void => {
     const result = new Float32Array(frameCount * frameSize);
 
     for (let fi = 0; fi < frameCount; fi++) {
-      const y = frameCount === 1 ? 0 : (fi / (frameCount - 1)) * 2 - 1;
+      const y = frameCount === 1 ? 0 : (fi / frameCount) * 2 - 1;
 
       const offset = fi * frameSize;
 
       for (let si = 0; si < frameSize; si++) {
-        const x = frameSize === 1 ? 0 : (si / (frameSize - 1)) * 2 - 1;
+        const x = frameSize === 1 ? 0 : (si / frameSize) * 2 - 1;
 
         result[offset + si] = clip(fn(x, y));
       }

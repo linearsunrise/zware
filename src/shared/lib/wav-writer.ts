@@ -1,68 +1,101 @@
-import { WAV_SAMPLE_RATE } from '@/shared/config/wavetable'
+import {
+  Endian,
+  RawString,
+  Struct,
+  U16,
+  U32,
+  U32s,
+  U8,
+  U8s,
+} from 'construct-js';
 
-function writeStr(view: DataView, offset: number, str: string): number {
-  for (let i = 0; i < str.length; i++) {
-    view.setUint8(offset + i, str.charCodeAt(i) & 0xff)
-  }
-  return offset + str.length
+export default function createWavBuffer(
+  frames: Float32Array,
+  frameSize: number
+) {
+  const sampleRate = 44100;
+  const channels = 1;
+  const bitsPerSample = 32;
+  const bytesPerSample = bitsPerSample / 8;
+
+
+  const clmChunk = Struct('clmChunk')
+    .field('clmId', RawString('clm '))
+    .field('clmSize', U32(0, Endian.Little))
+    .field('clmData', RawString([
+      '<!>',
+      frameSize.toString(),
+      'wavetable',
+      '(www.xferrecords.com)'
+    ].join(' ')));
+
+  const clmSize = clmChunk.get('clmData').computeBufferSize();
+  clmChunk.get('clmSize').set(clmSize);
+
+
+  // ВАЖНО:
+  // сохраняем ровно IEEE-754 байты Float32Array
+  const audioBytes = new Uint8Array(
+    frames.buffer,
+    frames.byteOffset,
+    frames.byteLength
+  );
+
+  const junkData = new Uint8Array(28);
+
+  const riffChunkStruct = Struct('riffChunk')
+    .field('magic', RawString('RIFF'))
+    .field('size', U32(0, Endian.Little))
+    .field('fmtName', RawString('WAVE'));
+
+  const junkChunkStruct = Struct('junkChunk')
+    .field('id', RawString('JUNK'))
+    .field('size', U32(junkData.byteLength, Endian.Little))
+    .field('data', U8s(Array.from(junkData)));
+
+  const fmtSubChunkStruct = Struct('fmtSubChunk')
+    .field('id', RawString('fmt '))
+    .field('subChunk1Size', U32(16, Endian.Little))
+    .field('audioFormat', U16(3, Endian.Little))
+    .field('numChannels', U16(channels, Endian.Little))
+    .field('sampleRate', U32(sampleRate, Endian.Little))
+    .field(
+      'byteRate',
+      U32(sampleRate * channels * bytesPerSample, Endian.Little)
+    )
+    .field('blockAlign', U16(channels * bytesPerSample, Endian.Little))
+    .field('bitsPerSample', U16(bitsPerSample, Endian.Little))
+
+  const dataSubChunkStruct = Struct('dataSubChunk')
+    .field('id', RawString('data'))
+    .field('size', U32(audioBytes.byteLength, Endian.Little))
+    .field('data', U8s(Array.from(audioBytes)));
+
+  const fileStruct = Struct('waveFile')
+    .field('riffChunk', riffChunkStruct)
+    .field('junkChunk', junkChunkStruct)
+    .field('fmtSubChunk', fmtSubChunkStruct)
+    .field('clmChunk', clmChunk)
+    .field('dataSubChunk', dataSubChunkStruct);
+
+  console.log(fileStruct.computeBufferSize() - 8, clmChunk.computeBufferSize())
+
+  riffChunkStruct.get('size').set(fileStruct.computeBufferSize() - 8);
+
+  return fileStruct;
 }
 
-export function createWavBuffer(frames: Float32Array, frameSize: number): ArrayBuffer {
-  const totalSamples = frames.length
-
-  const serumMeta = `m 0\x00\x00\x00<!>${frameSize} 00000000 wavetable`
-  const fmtContentSize = 16 + 2 + serumMeta.length
-
-  const dataSize = totalSamples * 4
-  const riffDataSize = 4 + (8 + fmtContentSize) + (8 + dataSize)
-  const bufferSize = 8 + riffDataSize
-
-  const buffer = new ArrayBuffer(bufferSize)
-  const view = new DataView(buffer)
-  let offset = 0
-
-  offset = writeStr(view, offset, 'RIFF')
-  view.setUint32(offset, riffDataSize, true)
-  offset += 4
-  offset = writeStr(view, offset, 'WAVE')
-
-  offset = writeStr(view, offset, 'fmt ')
-  view.setUint32(offset, fmtContentSize, true)
-  offset += 4
-  view.setUint16(offset, 3, true)
-  offset += 2
-  view.setUint16(offset, 1, true)
-  offset += 2
-  view.setUint32(offset, WAV_SAMPLE_RATE, true)
-  offset += 4
-  view.setUint32(offset, WAV_SAMPLE_RATE * 4, true)
-  offset += 4
-  view.setUint16(offset, 2, true)
-  offset += 2
-  view.setUint16(offset, 32, true)
-  offset += 2
-  offset = writeStr(view, offset, 'cl')
-  offset = writeStr(view, offset, serumMeta)
-
-  offset = writeStr(view, offset, 'data')
-  view.setUint32(offset, dataSize, true)
-  offset += 4
-
-  for (const frame of frames) {
-    view.setFloat32(offset, frame ?? 0, true)
-    offset += 4
-  }
-
-  return buffer
-}
-
-export function downloadWav(frames: Float32Array, frameSize: number, filename = 'wavetable.wav') {
-  const buffer = createWavBuffer(frames, frameSize)
-  const blob = new Blob([buffer], { type: 'audio/wav' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+export function downloadWav(
+  frames: Float32Array,
+  frameSize: number,
+  filename = 'wavetable.wav'
+) {
+  const buffer = createWavBuffer(frames, frameSize).toUint8Array();
+  const blob = new Blob([buffer], { type: 'audio/wav' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }

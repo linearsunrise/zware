@@ -9,6 +9,7 @@
     "lint": "eslint . --ext .vue,.ts --fix"
   },
   "dependencies": {
+    "construct-js": "^1.0.1",
     "mathjs": "^13.0.0",
     "vue": "^3.4.0"
   },
