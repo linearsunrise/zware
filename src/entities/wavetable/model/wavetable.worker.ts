@@ -2,9 +2,6 @@ import { parseFormula } from '@/shared/lib/math-parser';
 import type { GenerateRequest, GenerateResponse } from './types';
 
 self.onmessage = (event: MessageEvent<GenerateRequest>): void => {
-  console.log({ s: event })
-  // if (event.type !== 'generate') return self.postMessage({ type: 'error' });
-
   function clip(value: number): number {
     if (!isFinite(value)) return 0;
     return Math.max(-1, Math.min(1, value));
@@ -35,8 +32,6 @@ self.onmessage = (event: MessageEvent<GenerateRequest>): void => {
     };
 
     self.postMessage(response, { transfer: [result.buffer] })
-
-    console.log({ response2: response })
   } catch (e) {
     const response: GenerateResponse = {
       type: 'error',

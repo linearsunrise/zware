@@ -1,11 +1,10 @@
 import {
+  DataType,
   Endian,
   RawString,
   Struct,
   U16,
   U32,
-  U32s,
-  U8,
   U8s,
 } from 'construct-js';
 
@@ -18,20 +17,23 @@ export default function createWavBuffer(
   const bitsPerSample = 32;
   const bytesPerSample = bitsPerSample / 8;
 
-
   const clmChunk = Struct('clmChunk')
     .field('clmId', RawString('clm '))
     .field('clmSize', U32(0, Endian.Little))
-    .field('clmData', RawString([
-      '<!>',
-      frameSize.toString(),
-      'wavetable',
-      '(www.xferrecords.com)'
-    ].join(' ')));
+    .field(
+      'clmData',
+      RawString(
+        [
+          '<!>',
+          frameSize.toString(),
+          'wavetable',
+          '(www.xferrecords.com)',
+        ].join(' ')
+      )
+    );
 
   const clmSize = clmChunk.get('clmData').computeBufferSize();
-  clmChunk.get('clmSize').set(clmSize);
-
+  clmChunk.get<DataType<typeof U32>>('clmSize').set(clmSize);
 
   // ВАЖНО:
   // сохраняем ровно IEEE-754 байты Float32Array
@@ -64,7 +66,7 @@ export default function createWavBuffer(
       U32(sampleRate * channels * bytesPerSample, Endian.Little)
     )
     .field('blockAlign', U16(channels * bytesPerSample, Endian.Little))
-    .field('bitsPerSample', U16(bitsPerSample, Endian.Little))
+    .field('bitsPerSample', U16(bitsPerSample, Endian.Little));
 
   const dataSubChunkStruct = Struct('dataSubChunk')
     .field('id', RawString('data'))
@@ -78,9 +80,9 @@ export default function createWavBuffer(
     .field('clmChunk', clmChunk)
     .field('dataSubChunk', dataSubChunkStruct);
 
-  console.log(fileStruct.computeBufferSize() - 8, clmChunk.computeBufferSize())
-
-  riffChunkStruct.get('size').set(fileStruct.computeBufferSize() - 8);
+  riffChunkStruct
+    .get<DataType<typeof U32>>('size')
+    .set(fileStruct.computeBufferSize() - 8);
 
   return fileStruct;
 }
@@ -90,8 +92,8 @@ export function downloadWav(
   frameSize: number,
   filename = 'wavetable.wav'
 ) {
-  const buffer = createWavBuffer(frames, frameSize).toUint8Array();
-  const blob = new Blob([buffer], { type: 'audio/wav' });
+  const wav = createWavBuffer(frames, frameSize).toUint8Array();
+  const blob = new Blob([new Uint8Array(wav)], { type: 'audio/wav' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
