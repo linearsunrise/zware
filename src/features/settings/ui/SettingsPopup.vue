@@ -14,7 +14,7 @@
           class="settings-popup__input"
           type="number"
           :value="customFrameSizeRaw"
-          min="64"
+          min="1"
           max="8192"
           step="1"
           @change="onCustomChange"

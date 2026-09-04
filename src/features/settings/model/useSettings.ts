@@ -26,7 +26,7 @@ export function useSettings() {
   }
 
   function setCustomFrameSize(value: number) {
-    const clamped = Math.max(64, Math.min(8192, value))
+    const clamped = Math.max(1, Math.min(8192, value))
     customFrameSizeRaw.value = clamped
   }
 

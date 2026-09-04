@@ -25,7 +25,7 @@ export default function createWavBuffer(
   frames: Float32Array,
   frameSize: number
 ) {
-  const sampleRate = 48000;
+  const sampleRate = frameSize * 2 ** 6;
   const channels = 1;
   const bitsPerSample = 32;
   const bytesPerSample = bitsPerSample / 8;
@@ -33,7 +33,7 @@ export default function createWavBuffer(
   const flags = [MorphingMode.Lerp, CreatedMode.Custom, 0, 0, 0, 0, 0, 0];
 
   const clmDataSize = 48
-  const clmData = `<!>${frameSize.toString().padStart(4, ' ')} wavetable ${flags.join('')}`.padEnd(clmDataSize, String.fromCharCode(0))
+  const clmData = `<!>${frameSize.toString().padStart(4, String.fromCharCode(0))} wavetable ${flags.join('')}`.padEnd(clmDataSize, String.fromCharCode(0))
 
   const clmChunk = Struct('clmChunk')
     .field('clmId', RawString('clm '))
