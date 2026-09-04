@@ -38,8 +38,8 @@ const props = defineProps<{
 }>()
 
 const cursorLeft = computed(() => {
-  if (!props.frames || props.frames.length <= 1) return '0%'
-  return `${(props.selectedFrameIndex / (props.frames.length - 1)) * 100}%`
+  if (!props.frames || props.frameCount <= 1) return '0%'
+  return `${(props.selectedFrameIndex / (props.frameCount - 1)) * 100}%`
 })
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
