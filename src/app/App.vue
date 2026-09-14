@@ -7,6 +7,7 @@
           :frame-size="frameSize"
           :frame-count="frameCount"
           :selected-frame-index="selectedFrameIndex"
+          @select="selectFrame"
         />
       </section>
 

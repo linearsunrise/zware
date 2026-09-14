@@ -5,19 +5,23 @@ import type { MainToWorkletMessage } from './types'
 // A future ADSR/EG module should replace or drive this same gain stage.
 const DECLICK_MS = 4
 
-// How long a frame switch takes to cross-fade into, so scrubbing through
-// frames while a note sounds morphs the waveform instead of clicking/popping.
-const CROSSFADE_MS = 25
+// The played frame position continuously glides toward whatever frame is
+// selected instead of jumping straight there, so scrubbing through frames
+// while a note sounds morphs the waveform instead of clicking/popping.
+// A one-pole glide (rather than a fixed-length from/to cross-fade) is used
+// deliberately: it has no "in progress" state to restart, so re-selecting a
+// frame faster than the glide time — e.g. dragging the heatmap — can't
+// produce the discontinuity a restarted two-point cross-fade would.
+const FRAME_GLIDE_MS = 4
 
 class WavetableVoiceProcessor extends AudioWorkletProcessor {
   private wavetable: Float32Array | null = null
   private frameSize = 0
   private frameCount = 0
 
-  private fromFrame = 0
-  private toFrame = 0
-  private crossfadeT = 1
-  private readonly crossfadeIncrement = 1 / ((CROSSFADE_MS / 1000) * sampleRate)
+  private targetFrame = 0
+  private smoothedFrame = 0
+  private readonly frameGlideCoeff = 1 - Math.exp(-1 / ((FRAME_GLIDE_MS / 1000) * sampleRate))
 
   private phase = 0
   private phaseIncrement = 0
@@ -40,19 +44,16 @@ class WavetableVoiceProcessor extends AudioWorkletProcessor {
         this.wavetable = new Float32Array(message.buffer)
         this.frameSize = message.frameSize
         this.frameCount = message.frameCount
-        this.fromFrame = Math.min(this.fromFrame, Math.max(0, this.frameCount - 1))
-        this.toFrame = this.fromFrame
-        this.crossfadeT = 1
+        this.targetFrame = Math.min(this.targetFrame, Math.max(0, this.frameCount - 1))
+        // A new wavetable has unrelated frame content, so snap instead of
+        // gliding from a position that belonged to the old table.
+        this.smoothedFrame = this.targetFrame
         break
       }
 
       case 'frameIndex': {
         if (!this.frameCount) break
-        const index = Math.max(0, Math.min(this.frameCount - 1, message.index))
-        if (index === this.toFrame) break
-        this.fromFrame = this.toFrame
-        this.toFrame = index
-        this.crossfadeT = 0
+        this.targetFrame = Math.max(0, Math.min(this.frameCount - 1, message.index))
         break
       }
 
@@ -73,7 +74,7 @@ class WavetableVoiceProcessor extends AudioWorkletProcessor {
     }
   }
 
-  private readSample(frameIndex: number, phase: number): number {
+  private readFrameSample(frameIndex: number, phase: number): number {
     const wavetable = this.wavetable as Float32Array
     const base = frameIndex * this.frameSize
     const i0 = Math.floor(phase)
@@ -81,6 +82,16 @@ class WavetableVoiceProcessor extends AudioWorkletProcessor {
     const i1 = i0 + 1 >= this.frameSize ? 0 : i0 + 1
     const s0 = wavetable[base + i0]
     const s1 = wavetable[base + i1]
+    return s0 + (s1 - s0) * frac
+  }
+
+  private readSample(framePosition: number, phase: number): number {
+    const f0 = Math.floor(framePosition)
+    const frac = framePosition - f0
+    const s0 = this.readFrameSample(f0, phase)
+    if (frac <= 0) return s0
+    const f1 = Math.min(this.frameCount - 1, f0 + 1)
+    const s1 = this.readFrameSample(f1, phase)
     return s0 + (s1 - s0) * frac
   }
 
@@ -104,17 +115,9 @@ class WavetableVoiceProcessor extends AudioWorkletProcessor {
       let sample = 0
 
       if (this.gain > 0 || this.gainTarget > 0) {
-        const toSample = this.readSample(this.toFrame, this.phase)
+        this.smoothedFrame += (this.targetFrame - this.smoothedFrame) * this.frameGlideCoeff
 
-        if (this.crossfadeT < 1) {
-          this.crossfadeT = Math.min(1, this.crossfadeT + this.crossfadeIncrement)
-          const fromSample = this.readSample(this.fromFrame, this.phase)
-          sample = fromSample + (toSample - fromSample) * this.crossfadeT
-        } else {
-          sample = toSample
-        }
-
-        sample *= this.gain
+        sample = this.readSample(this.smoothedFrame, this.phase) * this.gain
 
         this.phase += this.phaseIncrement
         if (this.phase >= this.frameSize) this.phase -= this.frameSize

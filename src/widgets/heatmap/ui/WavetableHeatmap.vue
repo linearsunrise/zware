@@ -1,7 +1,14 @@
 <template>
   <div class="heatmap">
     <span class="heatmap__label">Heatmap</span>
-    <canvas ref="canvasRef" class="heatmap__canvas" />
+    <canvas
+      ref="canvasRef"
+      class="heatmap__canvas"
+      @pointerdown="handlePointerDown"
+      @pointermove="handlePointerMove"
+      @pointerup="handlePointerUp"
+      @pointercancel="handlePointerUp"
+    />
     <div
       v-if="frames"
       class="heatmap__cursor"
@@ -37,6 +44,10 @@ const props = defineProps<{
   selectedFrameIndex: number
 }>()
 
+const emit = defineEmits<{
+  select: [index: number]
+}>()
+
 const cursorLeft = computed(() => {
   if (!props.frames || props.frameCount <= 1) return '0%'
   return `${(props.selectedFrameIndex / (props.frameCount - 1)) * 100}%`
@@ -44,6 +55,37 @@ const cursorLeft = computed(() => {
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let resizeObserver: ResizeObserver | null = null
+let dragging = false
+
+function indexFromEvent(event: PointerEvent): number {
+  const canvas = canvasRef.value
+  if (!canvas || props.frameCount <= 0) return props.selectedFrameIndex
+
+  const rect = canvas.getBoundingClientRect()
+  const ratio = rect.width > 0 ? (event.clientX - rect.left) / rect.width : 0
+  const clamped = Math.max(0, Math.min(1, ratio))
+
+  return Math.round(clamped * (props.frameCount - 1))
+}
+
+function handlePointerDown(event: PointerEvent) {
+  if (event.button !== 0 || !props.frames) return
+
+  dragging = true
+  canvasRef.value?.setPointerCapture(event.pointerId)
+  emit('select', indexFromEvent(event))
+}
+
+function handlePointerMove(event: PointerEvent) {
+  if (!dragging) return
+  emit('select', indexFromEvent(event))
+}
+
+function handlePointerUp(event: PointerEvent) {
+  if (!dragging) return
+  dragging = false
+  canvasRef.value?.releasePointerCapture(event.pointerId)
+}
 
 function draw() {
   const canvas = canvasRef.value
@@ -126,6 +168,8 @@ onUnmounted(() => {
   height: 100%;
   image-rendering: pixelated;
   display: block;
+  cursor: col-resize;
+  touch-action: none;
 }
 
 .heatmap__cursor {
