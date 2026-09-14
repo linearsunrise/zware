@@ -34,6 +34,7 @@
       </section>
     </main>
 
+    <ComputerKeyboard />
     <BottomBar />
   </div>
 </template>
@@ -45,6 +46,7 @@ import Oscilloscope from '@/widgets/oscilloscope/ui/Oscilloscope.vue';
 import FormulaEditor from '@/widgets/formula-editor/ui/FormulaEditor.vue';
 import FrameSelector from '@/widgets/frame-selector/ui/FrameSelector.vue';
 import BottomBar from '@/widgets/bottom-bar/ui/BottomBar.vue';
+import ComputerKeyboard from '@/features/computer-keyboard/ui/ComputerKeyboard.vue';
 import { useWavetable } from '@/entities/wavetable/model/useWavetable';
 
 const {

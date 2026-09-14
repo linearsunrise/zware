@@ -9,6 +9,26 @@
     </button>
 
     <div class="bottom-bar__right">
+      <div
+        class="bottom-bar__midi-status"
+        :class="{ 'bottom-bar__midi-status--connected': midiConnected }"
+        :title="midiTitle"
+      >
+        MIDI {{ midiSupported ? (midiConnected ? midiDeviceNames.join(', ') : 'No device') : 'Unsupported' }}
+      </div>
+
+      <button
+        class="bottom-bar__btn bottom-bar__btn--icon"
+        :class="{ 'bottom-bar__btn--active': keyboardActive }"
+        @click="toggleKeyboard()"
+        title="Toggle computer keyboard (Ableton-style typing keyboard)"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="6" width="18" height="12" rx="1" />
+          <path d="M7 10v0M11 10v0M15 10v0M17 10v0M7 14h10" />
+        </svg>
+      </button>
+
       <div class="bottom-bar__settings-anchor">
         <button
           class="bottom-bar__btn bottom-bar__btn--icon"
@@ -33,12 +53,25 @@ import SettingsPopup from '@/features/settings/ui/SettingsPopup.vue'
 import { useWavetable } from '@/entities/wavetable/model/useWavetable'
 import { useSettings } from '@/features/settings/model/useSettings'
 import { downloadWav } from '@/shared/lib/wav-writer'
+import { useMidiInput } from '@/features/midi-input/model/useMidiInput'
+import { useComputerKeyboard } from '@/features/computer-keyboard/model/useComputerKeyboard'
 
 const { framesBuffer: frames } = useWavetable()
 const { frameSize } = useSettings()
 
+const {
+  isSupported: midiSupported,
+  isConnected: midiConnected,
+  deviceNames: midiDeviceNames,
+  error: midiError,
+} = useMidiInput()
+
+const { isActive: keyboardActive, toggle: toggleKeyboard } = useComputerKeyboard()
+
 const settingsOpen = ref(false)
 const hasFrames = computed(() => frames.value !== null)
+
+const midiTitle = computed(() => midiError.value ?? undefined)
 
 function handleSave() {
   if (!frames.value) return
@@ -67,6 +100,20 @@ function handleSave() {
 
 .bottom-bar__settings-anchor {
   position: relative;
+}
+
+.bottom-bar__midi-status {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 2.75rem;
+  color: rgba(227, 227, 227, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60rem;
+}
+
+.bottom-bar__midi-status--connected {
+  color: #7ee787;
 }
 
 .bottom-bar__btn {
