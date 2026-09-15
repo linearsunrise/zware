@@ -1,6 +1,12 @@
 import { ref, shallowRef, watch } from 'vue'
 import { useWavetable } from '@/entities/wavetable/model/useWavetable'
 import type { MainToWorkletMessage } from './types'
+// `?worker&url` routes this through Vite's worker bundling pipeline so it's
+// compiled to real JS in production, instead of `new URL(..., import.meta.url)`
+// which only gets recognized as a worker by the `new Worker(...)` pattern —
+// `audioWorklet.addModule()` doesn't match that, so the .ts source would
+// otherwise ship as a raw asset with the wrong MIME type.
+import workletUrl from './wavetable-voice.worklet.ts?worker&url'
 
 const isReady = ref(false)
 const activeNote = shallowRef<number | null>(null)
@@ -26,9 +32,7 @@ async function ensureWorklet(): Promise<AudioWorkletNode> {
     workletReadyPromise = (async () => {
       audioContext = new AudioContext()
 
-      await audioContext.audioWorklet.addModule(
-        new URL('./wavetable-voice.worklet.ts', import.meta.url)
-      )
+      await audioContext.audioWorklet.addModule(workletUrl)
 
       const node = new AudioWorkletNode(audioContext, 'wavetable-voice-processor', {
         numberOfInputs: 0,
