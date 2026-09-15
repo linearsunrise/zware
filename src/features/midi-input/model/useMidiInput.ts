@@ -2,13 +2,21 @@ import { ref, shallowRef } from 'vue'
 import { useSynthEngine } from '@/entities/synth-engine'
 import { useWavetable } from '@/entities/wavetable/model/useWavetable'
 
+export type MidiDeviceOption = {
+  id: string
+  name: string
+}
+
 const isSupported = typeof navigator !== 'undefined' && 'requestMIDIAccess' in navigator
 const isConnected = ref(false)
-const deviceNames = shallowRef<string[]>([])
+const devices = shallowRef<MidiDeviceOption[]>([])
+// null = listen to every connected input (previous/default behavior).
+const selectedDeviceId = ref<string | null>(null)
 const error = ref<string | null>(null)
 
 let midiAccess: MIDIAccess | null = null
 let requested = false
+let currentEngine: ReturnType<typeof useSynthEngine> | null = null
 
 const CC_STATUS = 0xb0
 
@@ -58,21 +66,36 @@ function handleMidiMessage(
   }
 }
 
-function attachInputs(engine: ReturnType<typeof useSynthEngine>) {
-  if (!midiAccess) return
+function attachInputs() {
+  if (!midiAccess || !currentEngine) return
 
-  deviceNames.value = Array.from(midiAccess.inputs.values()).map(
-    (input) => input.name ?? 'MIDI device'
-  )
-  isConnected.value = midiAccess.inputs.size > 0
+  devices.value = Array.from(midiAccess.inputs.values()).map((input) => ({
+    id: input.id,
+    name: input.name ?? 'MIDI device',
+  }))
+
+  // The previously-selected device may have been unplugged.
+  if (selectedDeviceId.value && !devices.value.some((d) => d.id === selectedDeviceId.value)) {
+    selectedDeviceId.value = null
+  }
+
+  isConnected.value = devices.value.length > 0
+
+  const engine = currentEngine
 
   midiAccess.inputs.forEach((input) => {
-    input.onmidimessage = (event) => handleMidiMessage(event, engine)
+    const isSelected = selectedDeviceId.value === null || selectedDeviceId.value === input.id
+    input.onmidimessage = isSelected ? (event) => handleMidiMessage(event, engine) : null
   })
 }
 
+function selectDevice(id: string | null) {
+  selectedDeviceId.value = id
+  attachInputs()
+}
+
 export function useMidiInput() {
-  const engine = useSynthEngine()
+  currentEngine = useSynthEngine()
 
   if (!requested && isSupported) {
     requested = true
@@ -81,8 +104,8 @@ export function useMidiInput() {
       .requestMIDIAccess()
       .then((access) => {
         midiAccess = access
-        attachInputs(engine)
-        access.onstatechange = () => attachInputs(engine)
+        attachInputs()
+        access.onstatechange = () => attachInputs()
       })
       .catch((e) => {
         error.value = e instanceof Error ? e.message : 'MIDI access denied'
@@ -92,7 +115,9 @@ export function useMidiInput() {
   return {
     isSupported,
     isConnected,
-    deviceNames,
+    devices,
+    selectedDeviceId,
+    selectDevice,
     error,
   }
 }

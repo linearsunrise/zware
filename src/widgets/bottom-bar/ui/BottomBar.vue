@@ -9,12 +9,21 @@
     </button>
 
     <div class="bottom-bar__right">
-      <div
-        class="bottom-bar__midi-status"
-        :class="{ 'bottom-bar__midi-status--connected': midiConnected }"
+      <select
+        v-if="midiSupported"
+        class="bottom-bar__midi-select"
+        :class="{ 'bottom-bar__midi-select--connected': midiConnected }"
+        :value="selectedMidiDeviceId ?? ''"
         :title="midiTitle"
+        @change="onMidiDeviceChange"
       >
-        MIDI {{ midiSupported ? (midiConnected ? midiDeviceNames.join(', ') : 'No device') : 'Unsupported' }}
+        <option value="">All MIDI devices ({{ midiDevices.length }})</option>
+        <option v-for="device in midiDevices" :key="device.id" :value="device.id">
+          {{ device.name }}
+        </option>
+      </select>
+      <div v-else class="bottom-bar__midi-status" title="Web MIDI is not supported in this browser">
+        MIDI unsupported
       </div>
 
       <button
@@ -62,7 +71,9 @@ const { frameSize } = useSettings()
 const {
   isSupported: midiSupported,
   isConnected: midiConnected,
-  deviceNames: midiDeviceNames,
+  devices: midiDevices,
+  selectedDeviceId: selectedMidiDeviceId,
+  selectDevice: selectMidiDevice,
   error: midiError,
 } = useMidiInput()
 
@@ -72,6 +83,11 @@ const settingsOpen = ref(false)
 const hasFrames = computed(() => frames.value !== null)
 
 const midiTitle = computed(() => midiError.value ?? undefined)
+
+function onMidiDeviceChange(event: Event) {
+  const value = (event.target as HTMLSelectElement).value
+  selectMidiDevice(value === '' ? null : value)
+}
 
 function handleSave() {
   if (!frames.value) return
@@ -112,8 +128,23 @@ function handleSave() {
   max-width: 60rem;
 }
 
-.bottom-bar__midi-status--connected {
+.bottom-bar__midi-select {
+  background: #121212;
+  color: rgba(227, 227, 227, 0.5);
+  border: 0.25rem solid rgba(227, 227, 227, 0.2);
+  padding: 1.5rem 3rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 2.75rem;
+  cursor: pointer;
+  outline: none;
+  max-width: 60rem;
+  height: 34px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.bottom-bar__midi-select--connected {
   color: #7ee787;
+  border-color: rgba(126, 231, 135, 0.35);
 }
 
 .bottom-bar__btn {
@@ -123,7 +154,8 @@ function handleSave() {
   padding: 2rem 4rem;
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 3.5rem;
-  ;
+  height: 34px;
+  min-width: 34px;
   cursor: pointer;
   border: 0.25rem solid rgba(227, 227, 227, 0.2);
   background: transparent;
@@ -146,7 +178,8 @@ function handleSave() {
 }
 
 .bottom-bar__btn--icon {
-  padding: 2rem;
+  padding: 0;
+  justify-content: center;
   color: rgba(227, 227, 227, 0.5);
 }
 
